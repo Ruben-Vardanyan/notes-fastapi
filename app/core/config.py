@@ -3,7 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
-from pydantic.v1 import BaseSettings, validator
+from pydantic.v1 import BaseSettings, validator, EmailStr
 from sqlalchemy import URL
 
 
@@ -13,12 +13,13 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "notes-fastapi"
     DEBUG: bool = True
     API_V1_STR: str = "/api/v1"
+    API_BASE_URL: str
 
     # Timezone Configuration
     TIMEZONE: str = "Asia/Yerevan"
 
     # Security
-    SECRET_KEY: str # required
+    SECRET_KEY: str  # required
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_LIFETIME: timedelta = timedelta(minutes=30)
     REFRESH_TOKEN_LIFETIME: timedelta = timedelta(days=1)
@@ -64,6 +65,14 @@ class Settings(BaseSettings):
             return list(set(default_origins + v))
 
         return default_origins
+
+    # email
+    EMAIL_FROM: EmailStr
+    EMAIL_PASSWORD: str
+    EMAIL_PORT: int = 587
+    EMAIL_SERVER: str = "smtp.gmail.com"
+    EMAIL_TLS: bool = True
+    EMAIL_SSL: bool = False
 
     class Config:
         env_file = ".env"

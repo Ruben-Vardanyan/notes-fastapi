@@ -11,10 +11,11 @@ from app.models.user import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login", auto_error=False)
 
 
-def get_current_user(
+def get_current_inactive_user(
         token: str | None = Depends(oauth2_scheme),
         db: Session = Depends(get_db)
 ) -> User:
+    """Authenticates the token and returns the user record (Allows inactive users!)."""
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -40,11 +41,8 @@ def get_current_user(
             detail="User not found"
         )
 
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user account"
-        )
+    # ◄─── MOVED FROM HERE ───►
+    # The activation status check has been extracted into a separate dependency gate below
 
     # GRACE PERIOD CHECK: Compare token birth vs user logout timestamp
     if user.logged_out_at and issued_at_timestamp:
@@ -57,6 +55,18 @@ def get_current_user(
             )
 
     return user
+
+
+def get_current_user(
+        current_user: User = Depends(get_current_inactive_user)
+) -> User:
+    """Secondary security gate ensuring the verified user is completely active."""
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,  # 403 Forbidden is ideal here
+            detail="Inactive user account. Please verify your email address to proceed."
+        )
+    return current_user
 
 
 def get_current_active_superuser(

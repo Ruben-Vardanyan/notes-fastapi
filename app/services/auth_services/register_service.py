@@ -26,7 +26,8 @@ def create_user(db: Session, payload: UserCreateSchema) -> User:
     new_user = User(
         username=payload.username,
         email=payload.email,
-        password=security.hash_password(payload.password)
+        password=security.hash_password(payload.password),
+        is_active=False
     )
 
     db.add(new_user)

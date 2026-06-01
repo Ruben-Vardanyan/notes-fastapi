@@ -1,5 +1,6 @@
 # notes-fastapi/app/models/user.py
 from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean
+from sqlalchemy.orm import relationship
 
 from app.core import timezone
 from app.core.database import Base
@@ -41,4 +42,10 @@ class User(Base):
         default=timezone.now,
         onupdate=timezone.now,
         nullable=False
+    )
+
+    verification_codes = relationship(
+        "VerificationCode",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
