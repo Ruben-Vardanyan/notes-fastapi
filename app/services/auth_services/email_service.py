@@ -1,16 +1,9 @@
 # notes-fastapi/app/services/auth_services/email_service.py
-import secrets
 import smtplib
-from datetime import datetime, timezone, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy.orm import Session
-
 from app.core.config import settings
-from app.models.user import User
-from app.models.verification_code import VerificationCode, VerificationType
 
 
 def send_activation_email(email_to: str, username: str, token: str):
@@ -48,68 +41,38 @@ def send_activation_email(email_to: str, username: str, token: str):
         print(f"Failed to send email: {e}")
 
 
-def create_and_send_verification(
-        db: Session,
-        current_user: User,
-        background_tasks: BackgroundTasks
-):
-    """Renamed to avoid endpoint namespace confusion."""
-    if current_user.is_active:
-        raise HTTPException(status_code=400, detail="User is already verified and active.")
+def send_password_reset_email(email_to: str, username: str, token: str):
+    """Fires a short-lived password recovery link directly to the user's inbox."""
+    # Point this to your FRONTEND URL where the form will live!
+    # For local development testing, you can use localhost:3000
+    reset_url = f"{settings.FRONTEND_BASE_URL}/reset-password?token={token}"
 
-    current_now = datetime.now(timezone.utc)
-    db.query(VerificationCode).filter(
-        VerificationCode.user_id == current_user.id,
-        VerificationCode.purpose == VerificationType.EMAIL_VERIFICATION,
-        VerificationCode.used_at == None,
-        VerificationCode.expires_at > current_now,
-    ).update({VerificationCode.expires_at: current_now})
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Reset Your Notes Account Password"
+    msg["From"] = settings.EMAIL_FROM
+    msg["To"] = email_to
 
-    secure_token = secrets.token_urlsafe(32)
-    expiration_time = current_now + timedelta(hours=24)
+    html_content = f"""
+    <html>
+        <body>
+            <h3>Hello, {username}</h3>
+            <p>We received a request to reset the password for your Notes account.</p>
+            <p>Click the button below to set up a new password. <strong>This link is valid for 15 minutes only.</strong></p>
+            <p><a href="{reset_url}" style="padding: 10px 20px; background-color: #DC3545; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+            <p>If you did not request this change, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+            <small style="color: #777;">For security, if the button doesn't work, copy-paste this link: {reset_url}</small>
+        </body>
+    </html>
+    """
+    msg.attach(MIMEText(html_content, "html"))
 
-    db_code = VerificationCode(
-        user_id=current_user.id,
-        token=secure_token,
-        purpose=VerificationType.EMAIL_VERIFICATION,
-        expires_at=expiration_time
-    )
-
-    db.add(db_code)
-    db.commit()
-
-    background_tasks.add_task(
-        send_activation_email,
-        email_to=current_user.email,
-        username=current_user.username,
-        token=secure_token
-    )
-
-
-def execute_email_verification(db: Session, token: str):
-    """Processes verification token lifecycle database executions."""
-    verification_record = db.query(VerificationCode).filter(
-        VerificationCode.token == token,
-        VerificationCode.purpose == VerificationType.EMAIL_VERIFICATION
-    ).first()
-
-    if not verification_record:
-        raise HTTPException(status_code=404, detail="Invalid verification link.")
-
-    if verification_record.used_at is not None:
-        raise HTTPException(status_code=400, detail="This token has already been consumed.")
-
-    current_now = datetime.now(timezone.utc)
-    record_expiry = verification_record.expires_at.replace(tzinfo=timezone.utc)
-
-    if current_now > record_expiry:
-        raise HTTPException(status_code=400, detail="This activation link has expired.")
-
-    user_to_activate = db.query(User).filter(User.id == verification_record.user_id).first()
-    if not user_to_activate:
-        raise HTTPException(status_code=404, detail="Associated user account not found.")
-
-    user_to_activate.is_active = True
-    verification_record.used_at = current_now
-
-    db.commit()
+    try:
+        server = smtplib.SMTP(settings.EMAIL_SERVER, settings.EMAIL_PORT)
+        if settings.EMAIL_TLS:
+            server.starttls()
+        server.login(settings.EMAIL_FROM, settings.EMAIL_PASSWORD)
+        server.sendmail(settings.EMAIL_FROM, email_to, msg.as_string())
+        server.quit()
+    except Exception as e:
+        print(f"Failed to send password reset email: {e}")

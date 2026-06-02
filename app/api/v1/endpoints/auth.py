@@ -8,9 +8,11 @@ from app.core.database import get_db
 from app.core.limiter import limiter
 from app.dependencies.auth import get_current_user, get_current_inactive_user
 from app.models.user import User
-from app.schemas.auth import LoginResponseSchema, LoginSchema, RefreshTokenSchema, RefreshTokenResponseSchema
+from app.schemas.auth import LoginResponseSchema, LoginSchema, RefreshTokenSchema, RefreshTokenResponseSchema, \
+    ForgotPasswordSchema, ResetPasswordSchema
 from app.schemas.user import UserCreateSchema, UserResponseSchema
-from app.services.auth_services import login_service, register_service, token_service, logout_service, email_service
+from app.services.auth_services import login_service, register_service, token_service, logout_service, email_service, \
+    email_verification_service, forgot_password_service, reset_password_service
 
 router = APIRouter()
 
@@ -111,7 +113,7 @@ def request_verification_email(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_inactive_user)
 ):
-    email_service.create_and_send_verification(db, current_user, background_tasks)
+    email_verification_service.create_and_send_verification(db, current_user, background_tasks)
     return {"detail": "Verification email dispatched successfully."}
 
 
@@ -120,11 +122,51 @@ def request_verification_email(
 )
 @limiter.limit("10/minute")
 def verify_email(
-    request: Request,
-    token: str,
-    db: Session = Depends(get_db)
+        request: Request,
+        token: str,
+        db: Session = Depends(get_db)
 ):
-    email_service.execute_email_verification(db, token)
+    email_verification_service.execute_email_verification(db, token)
 
     test_redirect_url = "https://google.com"
     return RedirectResponse(url=test_redirect_url, status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post(
+    path="/forgot-password",
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("3/minute")
+def forgot_password(
+        request: Request,
+        payload: ForgotPasswordSchema,
+        background_tasks: BackgroundTasks,
+        db: Session = Depends(get_db)
+):
+    """
+    Initiates a password recovery sequence.
+    Always returns a successful message to mitigate account enumeration attacks.
+    """
+    forgot_password_service.process_forgot_password(db, payload.email, background_tasks)
+
+    return {
+        "detail": "If an account matches that email address, a password reset link has been dispatched."
+    }
+
+@router.post(
+    path='/reset-password',
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("5/minute")  # Prevent brute forcing or spamming password inputs
+def reset_password(
+        request: Request,
+        payload: ResetPasswordSchema,
+        db: Session = Depends(get_db)
+):
+    """
+    Consumes a valid password reset token and overwrites
+    the target user's current authentication credentials.
+    """
+    reset_password_service.execute_password_reset(db, payload.token, payload.new_password)
+
+    return {"detail": "Password has been successfully updated. Please log in with your new credentials."}

@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     API_V1_STR: str = "/api/v1"
     API_BASE_URL: str
+    FRONTEND_BASE_URL: str
 
     # Timezone Configuration
     TIMEZONE: str = "Asia/Yerevan"
