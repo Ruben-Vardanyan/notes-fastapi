@@ -1,10 +1,11 @@
 # notes-fastapi\app\core\security.py
+from datetime import datetime, timezone
+
 import jwt
 from fastapi import HTTPException
 from passlib.context import CryptContext
 from starlette import status
 
-from app.core import timezone
 from app.core.config import settings
 
 # --- password ---
@@ -28,7 +29,7 @@ def create_jwt_token(user_id: int, token_type: str = "access"):
     # Generates a signed JWT token.
     # user_id => user ID
     # token_type => "access" or "refresh"
-    now = timezone.now()
+    now = datetime.now(timezone.utc)
 
     if token_type == "access":
         expire = now + settings.ACCESS_TOKEN_LIFETIME

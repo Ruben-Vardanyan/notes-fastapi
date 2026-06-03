@@ -1,8 +1,7 @@
 # notes-fastapi/app/models/user.py
-from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, func
 from sqlalchemy.orm import relationship
 
-from app.core import timezone
 from app.core.database import Base
 
 
@@ -33,19 +32,25 @@ class User(Base):
 
     created_at = Column(
         DateTime(timezone=True),
-        default=timezone.now,
+        server_default=func.now(),
         nullable=False
     )
 
     updated_at = Column(
         DateTime(timezone=True),
-        default=timezone.now,
-        onupdate=timezone.now,
+        server_default=func.now(),
+        onupdate=func.now(),
         nullable=False
     )
 
     verification_codes = relationship(
         "VerificationCode",
         back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    owned_notes = relationship(
+        "Note",
+        back_populates="owner",
         cascade="all, delete-orphan"
     )

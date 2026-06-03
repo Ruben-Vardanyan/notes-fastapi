@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str  # required
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_LIFETIME: timedelta = timedelta(minutes=30)
-    REFRESH_TOKEN_LIFETIME: timedelta = timedelta(days=1)
+    REFRESH_TOKEN_LIFETIME: timedelta = timedelta(days=30)
     REFRESH_TOKEN_BLACKLIST: bool = True
 
     # Database Components

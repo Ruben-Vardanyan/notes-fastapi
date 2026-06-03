@@ -1,4 +1,7 @@
 # notes-fastapi/main.py
+from contextlib import asynccontextmanager
+
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, Request
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -7,8 +10,23 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.v1.urls import v1_router
 from app.core.config import settings
 from app.core.limiter import limiter
+from app.services.auth_services.cleanup_service import clean_expired_verification_codes, clean_blacklisted_tokens
 
-app = FastAPI(title=settings.PROJECT_NAME)
+scheduler = BackgroundScheduler()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # task 1
+    scheduler.add_job(clean_expired_verification_codes, 'interval', seconds=10)
+    scheduler.add_job(clean_blacklisted_tokens, 'interval', seconds=20)
+
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 
 
 # 1. Custom Middleware to bypass docs (Declared FIRST so it wraps the app correctly)

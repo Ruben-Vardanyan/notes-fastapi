@@ -1,10 +1,9 @@
 # notes-fastapi/app/models/verification_code.py
 import enum
 
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import relationship
 
-from app.core import timezone
 from app.core.database import Base
 
 
@@ -37,7 +36,7 @@ class VerificationCode(Base):
 
     created_at = Column(
         DateTime(timezone=True),
-        default=timezone.now,
+        server_default=func.now(),
         nullable=False
     )
 

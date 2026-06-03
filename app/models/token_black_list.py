@@ -1,7 +1,6 @@
 # notes-fastapi/app/models/token_black_list.py
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, func
 
-from app.core import timezone
 from app.core.database import Base
 
 
@@ -18,6 +17,6 @@ class TokenBlackList(Base):
 
     created_at = Column(
         DateTime(timezone=True),
-        default=timezone.now,
+        server_default=func.now(),
         nullable=False
     )
