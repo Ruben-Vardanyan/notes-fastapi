@@ -48,10 +48,14 @@ def get_current_inactive_user(
     if user.logged_out_at and issued_at_timestamp:
         token_issued_at = datetime.fromtimestamp(issued_at_timestamp, tz=timezone.utc)
 
-        if token_issued_at < user.logged_out_at:
+        db_logged_out_at = user.logged_out_at
+        if db_logged_out_at.tzinfo is None:
+            db_logged_out_at = db_logged_out_at.replace(tzinfo=timezone.utc)
+
+        if token_issued_at < db_logged_out_at:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked by a recent logout event. Please log in again."
+                detail="Token has been invalidated by a logout event."
             )
 
     return user

@@ -1,4 +1,5 @@
 # notes-fastapi\app\core\security.py
+import uuid
 from datetime import datetime, timezone
 
 import jwt
@@ -42,7 +43,8 @@ def create_jwt_token(user_id: int, token_type: str = "access"):
         "exp": int(expire.timestamp()),
         "iat": int(now.timestamp()),
         "sub": str(user_id),
-        "type": token_type
+        "type": token_type,
+        "jti": str(uuid.uuid4())
     }
 
     encoded_jwt = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)

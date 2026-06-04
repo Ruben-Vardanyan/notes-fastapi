@@ -37,7 +37,7 @@ def execute_password_reset(db: Session, token: str, new_password: str):
         raise HTTPException(status_code=404, detail="Associated user account not found.")
 
     # 5. Apply Credentials & Burn Token
-    user.hashed_password = hash_password(new_password)
+    user.password = hash_password(new_password)
     verification_record.used_at = current_now
 
     # 6. GLOBAL LOGOUT SECURITY TRIGGER:
