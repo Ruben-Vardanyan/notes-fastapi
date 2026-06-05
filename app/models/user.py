@@ -8,7 +8,6 @@ from app.core.database import Base
 class User(Base):
     __tablename__ = 'users'
 
-    # pk
     id = Column(Integer, primary_key=True)
 
     # required fields
@@ -18,7 +17,7 @@ class User(Base):
     # storing hashed passwords
     password = Column(String(255), nullable=False)
 
-    # Optional Fields (nullable=True by default, explicitly stated for clarity)
+    # Optional Fields
     first_name = Column(String(100))
     last_name = Column(String(100))
     date_of_birth = Column(Date)

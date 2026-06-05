@@ -6,7 +6,7 @@ from app.models.base import VerificationCode, TokenBlackList
 
 def clean_expired_verification_codes():
     """
-    Scheduler
+    Cleans expired verification codes.
     """
     db = SessionLocal()
 
@@ -32,12 +32,12 @@ def clean_expired_verification_codes():
 
 def clean_blacklisted_tokens():
     """
-    Scheduler
+    Cleans blacklisted tokens.
     """
     db = SessionLocal()
 
     try:
-        current_now = datetime.now(timezone.utc) + timedelta(days=1)
+        current_now = datetime.now(timezone.utc)
 
         deleted_count = db.query(TokenBlackList).filter(
             (TokenBlackList.expires_at < current_now)

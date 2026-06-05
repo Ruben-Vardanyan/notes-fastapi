@@ -3,7 +3,6 @@ import re
 
 
 def validate_username_string(username: str) -> str:
-    """Validates username formatting rules."""
     username = username.strip()
 
     if len(username) < 3:
@@ -17,7 +16,6 @@ def validate_username_string(username: str) -> str:
 
 
 def validate_password_complexity(password: str) -> str:
-    """Validates strong password compliance rules."""
     if len(password) < 8:
         raise ValueError("Password must be at least 8 characters long")
     if not any(char.isdigit() for char in password):

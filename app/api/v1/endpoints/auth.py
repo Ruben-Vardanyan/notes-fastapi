@@ -74,6 +74,7 @@ def refresh_access_token(
         payload: RefreshTokenSchema,
         db: Session = Depends(get_db)
 ):
+    """Refreshes a new token pair and blacklists the old refresh token."""
     access_token, refresh_token = token_service.refresh_access_token(db, payload)
 
     return {
@@ -94,7 +95,7 @@ def logout(
         current_user: User = Depends(get_current_user)
 ):
     """
-    Logs out the authenticated user by invalidating their refresh token.
+    Logs out the authenticated user by blacklisting their refresh token.
     Requires a valid Access Token in the Authorization Header.
     """
     logout_service.logout_user(db, user_id=current_user.id, refresh_token=payload.refresh_token)
@@ -109,10 +110,11 @@ def logout(
 @limiter.limit("3/minute")
 def request_verification_email(
         request: Request,
-        background_tasks: BackgroundTasks,  # ◄─ Triggers non-blocking background jobs
+        background_tasks: BackgroundTasks,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_inactive_user)
 ):
+    """Sends email with verification link."""
     email_verification_service.create_and_send_verification(db, current_user, background_tasks)
     return {"detail": "Verification email dispatched successfully."}
 
@@ -126,6 +128,7 @@ def verify_email(
         token: str,
         db: Session = Depends(get_db)
 ):
+    """Verifies user by making user active"""
     email_verification_service.execute_email_verification(db, token)
 
     test_redirect_url = "https://google.com"
@@ -144,8 +147,7 @@ def forgot_password(
         db: Session = Depends(get_db)
 ):
     """
-    Initiates a password recovery sequence.
-    Always returns a successful message to mitigate account enumeration attacks.
+    Sends an email to user with a link for reset password.
     """
     forgot_password_service.process_forgot_password(db, payload.email, background_tasks)
 
@@ -164,8 +166,7 @@ def reset_password(
         db: Session = Depends(get_db)
 ):
     """
-    Consumes a valid password reset token and overwrites
-    the target user's current authentication credentials.
+    Resets user's password.
     """
     reset_password_service.execute_password_reset(db, payload.token, payload.new_password)
 

@@ -11,10 +11,8 @@ class Note(Base):
 
     title = Column(String(255), nullable=False, index=True)
 
-    # Using Text instead of String for unlimited body length capabilities
     text = Column(Text, nullable=False, default="")
 
-    # Absolute core authority owner of this note record
     owner_id = Column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,

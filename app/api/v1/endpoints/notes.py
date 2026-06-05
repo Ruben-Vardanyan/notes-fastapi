@@ -28,9 +28,8 @@ router = APIRouter()
 def list_notes(
         request: Request,
         search: str | None = Query(default=None, description="Search term matching title or body content."),
-        # ─── CHANGE: Accept a list of options instead of a single string ───
         filter_by: list[Literal["owned", "editor", "viewer"]] = Query(
-            default=["owned", "editor", "viewer"],  # Robust list instantiation
+            default=["owned", "editor", "viewer"],
             description="Filter results by one or more permission levels. Defaults to everything."
         ),
         db: Session = Depends(get_db),
@@ -108,10 +107,9 @@ def delete_note(
 ):
     """
     Permanently deletes a note. Only the absolute owner is authorized to do this.
-    Returns HTTP 204 No Content on success.
     """
     note = get_note_by_id(db, note_id=note_id, owner=current_user)
-    # 3. Delete from database (SQLAlchemy cascades will auto-purge collaborator records!)
+    # SQLAlchemy cascades will auto-purge collaborator records
     db.delete(note)
     db.commit()
 
@@ -158,11 +156,10 @@ def remove_note_collaborator(
         current_user: User = Depends(get_current_user)
 ):
     """
-    Allows the note owner to revoke a user's access to a note.
+    Allows the note owner to revoke a collaborator's access to a note.
     """
-    # Verify ownership authority first
+    # Verifies ownership authority first
     get_note_by_id(db, note_id=note_id, owner=current_user)
-
     collaborator_service.remove_collaborator(db=db, note_id=note_id, target_user_id=user_id)
 
     return None

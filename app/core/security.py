@@ -15,21 +15,24 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password):
-    # Generated a encrypted password
+    """Generated an encrypted password"""
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password, hashed_password):
-    # Compares a login attempt password against the database stored hash.
+    """Compares a login attempt password against the database stored hash."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 # --- JWT Token Utilities ---
 
 def create_jwt_token(user_id: int, token_type: str = "access"):
-    # Generates a signed JWT token.
-    # user_id => user ID
-    # token_type => "access" or "refresh"
+    """
+    Generates a signed JWT token.
+    user_id => user ID
+    token_type => "access" or "refresh"
+    """
+
     now = datetime.now(timezone.utc)
 
     if token_type == "access":

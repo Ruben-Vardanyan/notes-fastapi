@@ -8,13 +8,13 @@ from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
-    # Directory Definitions (.resolve().parent steps back to project root)
+    # Main
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     PROJECT_NAME: str = "notes-fastapi"
     DEBUG: bool = True
     API_V1_STR: str = "/api/v1"
-    API_BASE_URL: str
-    FRONTEND_BASE_URL: str
+    API_BASE_URL: str  # required
+    FRONTEND_BASE_URL: str  # required
 
     # Timezone Configuration
     TIMEZONE: str = "Asia/Yerevan"
@@ -67,9 +67,9 @@ class Settings(BaseSettings):
 
         return default_origins
 
-    # email
-    EMAIL_FROM: EmailStr
-    EMAIL_PASSWORD: str
+    # email configs
+    EMAIL_FROM: EmailStr  # required
+    EMAIL_PASSWORD: str  # required
     EMAIL_PORT: int = 587
     EMAIL_SERVER: str = "smtp.gmail.com"
     EMAIL_TLS: bool = True

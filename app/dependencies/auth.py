@@ -41,10 +41,6 @@ def get_current_inactive_user(
             detail="User not found"
         )
 
-    # ◄─── MOVED FROM HERE ───►
-    # The activation status check has been extracted into a separate dependency gate below
-
-    # GRACE PERIOD CHECK: Compare token birth vs user logout timestamp
     if user.logged_out_at and issued_at_timestamp:
         token_issued_at = datetime.fromtimestamp(issued_at_timestamp, tz=timezone.utc)
 
@@ -67,7 +63,7 @@ def get_current_user(
     """Secondary security gate ensuring the verified user is completely active."""
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,  # 403 Forbidden is ideal here
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user account. Please verify your email address to proceed."
         )
     return current_user

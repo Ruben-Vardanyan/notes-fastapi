@@ -1,6 +1,6 @@
 # notes-fastapi/app/models/note_collaborator.py
 import enum
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Column, Integer, DateTime, Enum, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
