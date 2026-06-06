@@ -1,3 +1,5 @@
+# tests/auth/test_register.py
+
 def test_successful_registration(register_test_user):
     """Tests that a user can register cleanly with valid data."""
     # Run our conftest utility

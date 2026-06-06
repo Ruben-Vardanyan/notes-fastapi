@@ -1,6 +1,4 @@
 # tests/notes/test_feeds.py
-import pytest
-
 
 def test_feed_returns_combined_or_owned_notes_only(authenticated_client, register_and_activate_user, client):
     """Ensure the notes feed dynamically aggregates the correct scoped notes for the user."""

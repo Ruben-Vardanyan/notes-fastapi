@@ -1,108 +1,125 @@
 # Notes FastAPI
 
-A secure, high-performance Notes Management API backend
-built with **FastAPI**, **SQLAlchemy ORM**, and **PostgreSQL**.
-This project features production-grade security defaults, including role-based
-collaboration, rate limiting, and a multi-step secure email activation lifecycle.
+### Short description
+
+Practicing FastAPI by creating a notes API
+
+The application allows users to create notes with a title and content,
+and share them with other users, assigning either viewer or editor roles.
+
+Users can register within the app and verify their account 
+via a confirmation link sent to their email address.
+
+The authentication system is built using JWT. 
+Refresh tokens are automatically blacklisted after every rotation, 
+and active access tokens are instantly invalidated upon logout.
+
+Users can also securely reset their passwords if forgotten by requesting 
+a password-reset link sent directly to their email address.
+
+### Features
+
+- JWT Authentication
+- User Registration & Login
+- Email Validation
+- Rate Limiting
+- Redis Caching
+- Scheduled Background Tasks
+- PostgreSQL Database
+- Database Migrations
+- RESTful API Design
+- Automated Testing
 
 ---
 
-## 🛠️ Tech Stack & Core Libraries
-
-* **Framework:** [FastAPI](https://fastapi.tiangolo.com/) - High-performance, asynchronous web framework for building
-  APIs.
-* **ORM:** [SQLAlchemy](https://www.sqlalchemy.org/) - Object-Relational Mapper for safe and pythonic database
-  interactions.
-* **Database Driver:** `psycopg2` - PostgreSQL adapter for Python.
-* **Data Validation:** [Pydantic](https://www.google.com/search?q=https://docs.pydantic.dev/) - Validates request bodies
-  and structures API JSON responses.
-* **Security:** `PyJWT` - Implements secure JSON Web Tokens with access/refresh lifecycles and token blacklisting.
-* **Rate Limiting:** `SlowAPI` - Protects endpoints against brute-force attacks and spam requests.
-
+## Tech Stack
+ 
+| Layer | Library |
+|---|---|
+| Web Framework | FastAPI + Uvicorn |
+| Validation | Pydantic |
+| ORM | SQLAlchemy |
+| Database | PostgreSQL (psycopg2) |
+| Migrations | Alembic |
+| Auth | PyJWT / python-jose + Passlib (bcrypt) |
+| Caching | Redis |
+| Scheduling | APScheduler |
+| Rate Limiting | SlowAPI |
+| Testing | Pytest |
+| Config | Python Dotenv |
+ 
 ---
 
-## 🔐 Security & User Lifecycle Workflow
-
-This application implements a strict security pipeline to prevent fake account creation and unauthorized data access.
-
-### 1. User Registration & Activation Flow
-
-To verify user identities without third-party authentication overhead, accounts follow this sequential state logic:
-
-1. **Register (`POST /auth/register`):** User creates an account. The database initializes them as **inactive** (
-   `is_active = False`).
-2. **Request Verification (`POST /auth/request-verification`):** Generates a cryptographically secure token using
-   Python's `secrets.token_urlsafe(32)`.
-3. **Email Handshake:** An automated transactional email is dispatched containing a unique, secure link embedded with
-   the token.
-4. **Activation (`GET /auth/verify-email/{token}`):** When the link is visited, the backend validates the token, flags
-   the user account as **active** (`is_active = True`), and executes a clean HTTP `303 See Other` redirect to the
-   frontend login dashboard.
-
-### 2. Session Management
-
-* **Dual Token Lifecycle:** Employs brief short-lived `access_tokens` for regular api requests and longer-lived
-  `refresh_tokens` to seamlessly renew sessions.
-* **Token Blacklisting:** Logging out or shifting permissions instantly flags tokens in a memory store to neutralize
-  token-hijacking vulnerabilities.
-* **Endpoint Rate-Limiting:** Essential routes (like `/register` and `/login`) are guarded by `SlowAPI` counters to drop
-  automated credential-stuffing traffic.
-
----
-
-## 🚀 Quick Start Setup Guide
-
-### 1. Installation
-
-Clone the repository and install the project dependencies inside a clean virtual environment:
-
+## Setup
+ 
+### 1. Clone & Install
+ 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/notes-fastapi.git
+git clone https://github.com/Ruben-Vardanyan/notes-fastapi.git
 cd notes-fastapi
-
-# Create and activate a virtual environment
+ 
 python -m venv .venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-
-# Install required dependencies
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+ 
 pip install -r requirements.txt
-
 ```
-
-### 2. Environment Configuration
-
-Create a `.env` file in the project's root directory. The application reads these values safely at startup using
-`pydantic-settings`:
-
+ 
+### 2. Environment Variables
+ 
+Create a `.env` file in the project root:
+ 
 ```ini
-PROJECT_NAME = "Notes FastAPI"
-API_BASE_URL = "http://127.0.0.1:8000"
+PROJECT_NAME      = "Notes FastAPI"
+API_BASE_URL      = "http://127.0.0.1:8000"
 FRONTEND_BASE_URL = "http://127.0.0.1:3000"
-DEBUG = True
-SECRET_KEY = "your-super-secret-random-signing-key"
-
-# Database Configuration
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_USER = "postgres"
-DB_PASSWORD = "your-secure-postgres-password"
-DB_NAME = "notes_db"
-
-# SMTP Email Configuration (For verification links)
-EMAIL_FROM = "your-system-email@example.com"
+DEBUG             = True
+SECRET_KEY        = "your-super-secret-random-signing-key"
+ 
+# Database
+DB_HOST     = "localhost"
+DB_PORT     = 5432
+DB_USER     = "your-postgres-user"
+DB_PASSWORD = "your-postgres-password"
+DB_NAME     = "your-database-name"
+ 
+# SMTP (for verification & password reset emails)
+EMAIL_FROM     = "your-system-email@example.com"
 EMAIL_PASSWORD = "your-smtp-app-password"
-
 ```
-
-### 3. Running the Server
-
-Launch the development server using `uvicorn`:
-
+ 
+### 3. Database Migrations
+ 
+If migrations don't exist yet, initialise Alembic first:
+ 
 ```bash
-uvicorn main:app --reload
 
+alembic init migrations
 ```
+ 
+Then update `migrations/env.py` to wire in your models and database URL:
+ 
+```python
+from app.core.config import settings
+from app.models.base import Base
+ 
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+ 
+target_metadata = Base.metadata
+```
+ 
+Generate and apply migrations:
+ 
+```bash
 
-Once started, you can access the interactive API Swagger documentation hub directly at: **`http://127.0.0.1:8000/docs`**
+alembic revision --autogenerate -m "initial"
+alembic upgrade head
+```
+ 
+### 4. Run
+ 
+```bash
 
+uvicorn main:app --reload
+```
+ 
+Interactive API docs available at **http://127.0.0.1:8000/docs**

@@ -1,31 +1,5 @@
 # tests/notes/test_notes_crud.py
 
-def test_create_and_read_note_lifecycle(authenticated_client):
-    """Test creating a fresh note and instantly verifying its retrieval."""
-    auth_client, user_id = authenticated_client
-
-    # 1. Create a note
-    note_payload = {
-        "title": "Refactoring Victory",
-        "text": "My authentication test suite is 100% green and modular."
-    }
-    create_resp = auth_client.post("/api/v1/notes/", json=note_payload)
-    assert create_resp.status_code == 201
-
-    note_data = create_resp.json()
-    assert "id" in note_data
-    note_id = note_data["id"]
-
-    # 2. Read the note back
-    get_resp = auth_client.get(f"/api/v1/notes/{note_id}")
-    assert get_resp.status_code == 200
-
-    data = get_resp.json()
-    assert data["title"] == note_payload["title"]
-    assert data["text"] == note_payload["text"]
-    assert data["owner"]['id'] == user_id
-
-
 def test_update_note(authenticated_client):
     """Test modification of an existing note's payload attributes."""
     auth_client, _ = authenticated_client

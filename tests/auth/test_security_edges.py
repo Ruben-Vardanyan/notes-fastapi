@@ -1,7 +1,4 @@
 # tests/auth/test_security_edges.py
-import pytest
-from app.core import security
-
 
 def test_expired_access_token_returns_401(client, register_and_activate_user):
     """Ensure that an access token past its expiration lifespan is blocked."""
@@ -11,7 +8,6 @@ def test_expired_access_token_returns_401(client, register_and_activate_user):
 
     # 1. Grab a valid token string, but manually decode it to mock an older timestamp
     token = login_resp.json()["access_token"]
-    token_data = security.decode_jwt_token(token)
 
     # 2. Poison the token data by setting its expiration to 1 hour ago
     # Note: If your decode utility strictly blocks expired tokens on decoding,

@@ -1,3 +1,5 @@
+# tests/auth/test_logout.py
+
 def test_user_logout(client, register_and_activate_user):
     # 1. Safely create your active user database state
     _, payload, _ = register_and_activate_user()

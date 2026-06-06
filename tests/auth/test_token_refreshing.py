@@ -1,4 +1,4 @@
-# tests/auth/test_refresh.py
+# tests/auth/test_token_refreshing.py
 from app.models.base import User
 
 
