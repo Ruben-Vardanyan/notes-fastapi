@@ -7,7 +7,7 @@ from app.core.config import settings
 
 
 def send_activation_email(email_to: str, username: str, token: str):
-    """Logs into SMTP server and fires off the activation link email."""
+    """Logs into SMTP server and sends the activation link email."""
     # Matches your path parameter update /{token}
     activation_url = f"{settings.API_BASE_URL}{settings.API_V1_STR}/auth/verify-email/{token}"
 
@@ -42,10 +42,10 @@ def send_activation_email(email_to: str, username: str, token: str):
 
 
 def send_password_reset_email(email_to: str, username: str, token: str):
-    """Fires a short-lived password recovery link directly to the user's inbox."""
+    """Sends a short-lived password recovery link directly to the user's inbox."""
     # Point this to your FRONTEND URL where the form will live!
     # For local development testing, you can use localhost:3000
-    reset_url = f"{settings.FRONTEND_BASE_URL}/reset-password?token={token}"
+    reset_url = f"{settings.FRONTEND_BASE_URL}/reset-password/{token}"
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Reset Your Notes Account Password"

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.models.user import User
 from app.models.verification_code import VerificationCode, VerificationType
 
@@ -35,6 +35,13 @@ def execute_password_reset(db: Session, token: str, new_password: str):
     user = db.query(User).filter(User.id == verification_record.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Associated user account not found.")
+
+    # checks whether the new password is the same as the current password
+    if verify_password(new_password, user.password):
+        raise HTTPException(
+            status_code=400,
+            detail="Your new password cannot be the same as your current password."
+        )
 
     # 5. Apply Credentials & Burn Token
     user.password = hash_password(new_password)

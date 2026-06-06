@@ -10,7 +10,7 @@ from app.dependencies.auth import get_current_user, get_current_inactive_user
 from app.models.user import User
 from app.schemas.auth import LoginResponseSchema, LoginSchema, RefreshTokenSchema, RefreshTokenResponseSchema, \
     ForgotPasswordSchema, ResetPasswordSchema
-from app.schemas.user import UserCreateSchema, UserResponseSchema
+from app.schemas.user import UserCreateSchema
 from app.services.auth_services import login_service, register_service, token_service, logout_service, email_service, \
     email_verification_service, forgot_password_service, reset_password_service
 

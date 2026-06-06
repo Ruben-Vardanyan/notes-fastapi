@@ -15,7 +15,6 @@ def create_and_send_verification(
         current_user: User,
         background_tasks: BackgroundTasks
 ):
-    """Renamed to avoid endpoint namespace confusion."""
     if current_user.is_active:
         raise HTTPException(status_code=400, detail="User is already verified and active.")
 

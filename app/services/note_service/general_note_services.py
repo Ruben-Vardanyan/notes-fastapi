@@ -1,7 +1,6 @@
 # notes-fastapi\app\services\note_service\general_note_services.py
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from app.models.base import Note, User
 from app.models.note_collaborator import NoteCollaborator, CollaborationRole
@@ -21,7 +20,7 @@ def get_note_by_id(db: Session, note_id: int, owner: User = None):
             detail="Note not found or access denied."
         )
 
-    return note  # ◄─ Fixed: Do not call query.first() again
+    return note
 
 
 def get_note_with_read_permission(db: Session, note_id: int, user: User) -> Note:
